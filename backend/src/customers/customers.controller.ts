@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, Get, UnauthorizedException, Param } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -28,12 +28,20 @@ export class CustomersController {
     return this.generateToken(customer);
   }
 
-  // 供后台使用的查询接口
   @Get()
   async getAllCustomers() {
     const customers = await this.prisma.customer.findMany({ orderBy: { createdAt: 'desc' } });
-    // 脱敏，不返回密码
     return customers.map(c => ({ id: c.id, name: c.name, email: c.email, createdAt: c.createdAt }));
+  }
+
+  // 👈 新增：获取某个买家的订单历史
+  @Get(':id/orders')
+  async getMyOrders(@Param('id') id: string) {
+    return this.prisma.order.findMany({
+      where: { customerId: id },
+      include: { items: { include: { product: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
   }
 
   private generateToken(customer: any) {
