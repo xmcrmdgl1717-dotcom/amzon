@@ -32,6 +32,11 @@ model Product {
   basePrice    Float
   image        String
   stock        Int                  @default(100)
+  // 👇 新增字段，完美还原前端 UI
+  rating       Float                @default(4.5)
+  reviewCount  Int                  @default(120)
+  isPrime      Boolean              @default(true)
+  
   translations ProductTranslation[]
   orderItems   OrderItem[]
 }
