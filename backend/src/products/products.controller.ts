@@ -8,7 +8,7 @@ export class ProductsController {
   @Get()
   async findAll(@Query('locale') locale: string = 'en') {
     const products = await this.prisma.product.findMany({
-      include: { translations: { where: { locale } } }
+      include: { translations: { where: { locale } }, category: true }
     });
     
     return products.map(p => ({
@@ -20,6 +20,8 @@ export class ProductsController {
       rating: p.rating,
       reviewCount: p.reviewCount,
       isPrime: p.isPrime,
+      categoryId: p.categoryId, // 👈 返回分类 ID
+      categoryName: p.category?.name, // 👈 返回分类名称
       title: p.translations[0]?.title || p.slug,
       description: p.translations[0]?.description || ''
     }));
@@ -36,6 +38,7 @@ export class ProductsController {
         rating: 5.0,
         reviewCount: 0,
         isPrime: true,
+        categoryId: body.categoryId || null, // 👈 接收分类
         translations: {
           create: [{ locale: 'en', title: body.title, description: body.description || '' }]
         }
@@ -43,7 +46,6 @@ export class ProductsController {
     });
   }
 
-  // 👇 新增：更新商品接口
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: any) {
     const product = await this.prisma.product.findUnique({ where: { id } });
@@ -55,19 +57,12 @@ export class ProductsController {
         basePrice: body.price,
         image: body.image,
         stock: body.stock,
+        categoryId: body.categoryId || null, // 👈 更新分类
         translations: {
-          // 使用 upsert 确保即使原商品没有该语言的翻译，也能安全创建
           upsert: {
             where: { productId_locale: { productId: id, locale: 'en' } },
-            update: {
-              title: body.title,
-              description: body.description || ''
-            },
-            create: {
-              locale: 'en',
-              title: body.title,
-              description: body.description || ''
-            }
+            update: { title: body.title, description: body.description || '' },
+            create: { locale: 'en', title: body.title, description: body.description || '' }
           }
         }
       }
@@ -76,8 +71,6 @@ export class ProductsController {
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
-    if (!product) throw new NotFoundException('Product not found');
     return this.prisma.product.delete({ where: { id } });
   }
 }
