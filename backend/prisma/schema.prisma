@@ -8,7 +8,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 👈 临时保留旧值，防止现有数据迁移失败
 enum Role {
+  ADMIN
+  USER
   SUPER_ADMIN
   OPERATOR
   SUPPORT
