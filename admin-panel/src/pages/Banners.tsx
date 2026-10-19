@@ -3,15 +3,27 @@ import { API } from '../App';
 
 export default function Banners() {
   const [banners, setBanners] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({ imageUrl: '', linkUrl: '' });
   const [showForm, setShowForm] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const token = localStorage.getItem('admin_token');
 
   const loadBanners = () => {
+    setLoading(true);
+    setError('');
     fetch(`${API}/banners/admin`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
-      .then(setBanners);
+      .then(async res => {
+        if (!res.ok) throw new Error('获取轮播图失败，请检查后端是否正常运行');
+        return res.json();
+      })
+      .then(data => {
+        // 👈 安全兜底，防止 data 不是数组导致白屏
+        setBanners(Array.isArray(data) ? data : []);
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { loadBanners(); }, []);
@@ -53,6 +65,9 @@ export default function Banners() {
     loadBanners();
   };
 
+  if (loading) return <div className="p-8 text-center text-gray-500">加载中...</div>;
+  if (error) return <div className="p-8 text-center text-red-500 bg-red-50 rounded">报错：{error}</div>;
+
   return (
     <div className="max-w-4xl">
       <div className="flex justify-between items-center mb-6">
@@ -65,15 +80,14 @@ export default function Banners() {
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow mb-6 space-y-4 border">
           <div className="border-2 border-dashed p-4 text-center rounded-lg hover:bg-gray-50">
-            <label className="block text-sm font-medium mb-2">上传横幅图片</label>
             <input type="file" accept="image/*" onChange={handleFileUpload} className="block w-full text-sm file:bg-blue-50 file:text-blue-700 cursor-pointer" />
             {form.imageUrl && <img src={form.imageUrl} alt="Preview" className="h-32 mx-auto mt-4 rounded border object-cover" />}
           </div>
           <div>
             <label className="block text-sm mb-1">跳转链接 (可选)</label>
-            <input type="text" value={form.linkUrl} onChange={e => setForm({...form, linkUrl: e.target.value})} placeholder="/product/1 或 https://..." className="w-full border p-2 rounded" />
+            <input type="text" value={form.linkUrl} onChange={e => setForm({...form, linkUrl: e.target.value})} className="w-full border p-2 rounded" />
           </div>
-          <button type="submit" disabled={isUploading} className="bg-green-600 text-white px-6 py-2 rounded">保存轮播图</button>
+          <button type="submit" disabled={isUploading} className="bg-green-600 text-white px-6 py-2 rounded">保存</button>
         </form>
       )}
 
@@ -81,10 +95,7 @@ export default function Banners() {
         <table className="w-full text-left">
           <thead>
             <tr className="bg-gray-50 text-gray-600 text-sm border-b">
-              <th className="p-4">预览图</th>
-              <th className="p-4">状态</th>
-              <th className="p-4">跳转链接</th>
-              <th className="p-4 text-right">操作</th>
+              <th className="p-4">预览图</th><th className="p-4">状态</th><th className="p-4 text-right">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -96,13 +107,13 @@ export default function Banners() {
                     {b.isActive ? '展示中' : '已隐藏'}
                   </span>
                 </td>
-                <td className="p-4 text-sm text-gray-500 max-w-[200px] truncate">{b.linkUrl || '无'}</td>
                 <td className="p-4 text-right space-x-3">
                   <button onClick={() => toggleActive(b.id)} className="text-blue-500 text-sm">{b.isActive ? '隐藏' : '启用'}</button>
                   <button onClick={() => handleDelete(b.id)} className="text-red-500 text-sm">删除</button>
                 </td>
               </tr>
             ))}
+            {banners.length === 0 && <tr><td colSpan={3} className="p-8 text-center text-gray-500">暂无轮播图，请添加</td></tr>}
           </tbody>
         </table>
       </div>
