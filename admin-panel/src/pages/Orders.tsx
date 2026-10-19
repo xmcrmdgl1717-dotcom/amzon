@@ -13,16 +13,11 @@ export default function Orders() {
     setError('');
     fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } })
       .then(async res => {
-        if (!res.ok) throw new Error('网络请求失败，请检查后端是否正常');
+        if (!res.ok) throw new Error('网络请求失败');
         return res.json();
       })
-      .then(data => {
-        // 👈 安全兜底，确保是数组
-        setOrders(Array.isArray(data) ? data : []);
-      })
-      .catch(err => {
-        setError(err.message);
-      })
+      .then(data => setOrders(Array.isArray(data) ? data : []))
+      .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   };
 
@@ -38,6 +33,25 @@ export default function Orders() {
     }
   };
 
+  // 👈 弹窗输入物流单号
+  const handleShip = async (id: string) => {
+    const trackingNumber = window.prompt("请输入快递单号 (如: SF123456789):");
+    if (trackingNumber === null) return; // 点了取消
+    if (!trackingNumber.trim()) return alert("单号不能为空");
+
+    try {
+      await fetch(`${API}/orders/${id}/ship`, { 
+        method: 'PATCH', 
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ trackingNumber })
+      });
+      loadOrders();
+      if (selectedOrder && selectedOrder.id === id) setSelectedOrder(null);
+    } catch (err) {
+      alert('发货失败');
+    }
+  };
+
   if (loading) return <div className="p-8 text-center text-gray-500">数据加载中...</div>;
   if (error) return <div className="p-8 text-center text-red-500 bg-red-50 rounded">出错了：{error}</div>;
 
@@ -45,7 +59,7 @@ export default function Orders() {
     <div className="bg-white rounded-lg shadow border">
       <div className="p-4 border-b flex justify-between items-center bg-gray-50">
         <h2 className="text-lg font-bold">订单列表</h2>
-        <button onClick={loadOrders} className="text-sm text-blue-600">刷新</button>
+        <button onClick={loadOrders} className="text-sm text-blue-600 hover:underline">刷新</button>
       </div>
       <table className="w-full text-left">
         <thead>
@@ -80,7 +94,8 @@ export default function Orders() {
                     <button onClick={() => action(o.id, 'reject')} className="text-red-600">驳回</button>
                   </>
                 )}
-                {o.status === 'APPROVED' && <button onClick={() => action(o.id, 'ship')} className="text-blue-600">发货</button>}
+                {/* 👈 点击发货触发弹窗输入单号 */}
+                {o.status === 'APPROVED' && <button onClick={() => handleShip(o.id)} className="text-blue-600">发货</button>}
               </td>
             </tr>
           ))}
@@ -88,6 +103,7 @@ export default function Orders() {
         </tbody>
       </table>
 
+      {/* 订单详情弹窗 (增加了物流单号展示) */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -98,6 +114,9 @@ export default function Orders() {
             <div className="p-6 space-y-4">
               <p><strong>收货人：</strong>{selectedOrder.customerName}</p>
               <p><strong>地址：</strong>{selectedOrder.shippingAddr}</p>
+              {selectedOrder.trackingNumber && (
+                <p><strong>物流单号：</strong><span className="text-blue-600 font-bold">{selectedOrder.trackingNumber}</span></p>
+              )}
               <div className="border rounded divide-y">
                 {selectedOrder.items?.map((item: any) => (
                   <div key={item.id} className="p-3 flex justify-between">
