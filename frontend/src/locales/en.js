@@ -15,12 +15,12 @@ export const en = {
   categories: "Shop by Category",
   showAll: "Show All Products",
   allProducts: "All Products",
-  results: "results"
-};
-  // ... 之前的
+  results: "results",
+  // 新增的详情页字段
   inStock: "In Stock",
   outOfStock: "Out of Stock",
   description: "About this item",
   backToResults: "Back to results",
   buyNow: "Buy Now",
   freeDelivery: "FREE delivery Tomorrow"
+};
