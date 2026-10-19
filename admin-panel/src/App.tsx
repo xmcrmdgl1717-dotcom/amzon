@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Orders from './pages/Orders';
 import Products from './pages/Products';
+import Customers from './pages/Customers'; // 👈 引入客户管理页面
 
 export const API = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000';
 
@@ -18,10 +19,12 @@ function Layout({ children }: { children: React.ReactNode }) {
     navigate('/login');
   };
 
+  // 👈 在侧边栏数组中新增客户管理
   const navItems = [
     { path: '/dashboard', name: '仪表盘' },
     { path: '/orders', name: '订单管理' },
     { path: '/products', name: '商品管理' },
+    { path: '/customers', name: '客户管理' }, 
   ];
 
   return (
@@ -73,6 +76,8 @@ export default function App() {
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/orders" element={<Layout><Orders /></Layout>} />
         <Route path="/products" element={<Layout><Products /></Layout>} />
+        {/* 👈 新增客户管理路由 */}
+        <Route path="/customers" element={<Layout><Customers /></Layout>} /> 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
