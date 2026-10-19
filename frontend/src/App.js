@@ -12,6 +12,7 @@ import Registry from './pages/Registry';
 import GiftCards from './pages/GiftCards';
 import Sell from './pages/Sell';
 import ProductDetail from './pages/ProductDetail'; // 👈 引入
+import BottomNav from './components/BottomNav';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,6 +41,7 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          <BottomNav /> {/* 👈 新增 */}
         </div>
       </Router>
     </CartProvider>
