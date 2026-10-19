@@ -52,12 +52,13 @@ export const CartProvider = ({ children }) => {
   const isInCart = (productId) => state.items.some(item => item.id === productId);
   const getItemQuantity = (productId) => state.items.find(item => item.id === productId)?.quantity || 0;
 
-  const checkout = async (customerInfo, couponCode = null) => {
+  const checkout = async (couponCode = null) => {
     const user = JSON.parse(localStorage.getItem('customer_info'));
+    if (!user) throw new Error('Please login first');
+    
     const orderPayload = {
-      ...customerInfo,
-      customerId: user?.id || null,
-      couponCode, // 👈 传递优惠券
+      customerId: user.id,
+      couponCode,
       items: state.items.map(item => ({
         productId: item.id,
         quantity: item.quantity
