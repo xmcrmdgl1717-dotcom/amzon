@@ -5,7 +5,7 @@ import { AuthController } from './auth/auth.controller';
 import { ProductsController } from './products/products.controller';
 import { OrdersController } from './orders/orders.controller';
 import { CustomersModule } from './customers/customers.module';
-import { CategoriesModule } from './categories/categories.module'; // 👈 引入
+import { CategoriesModule } from './categories/categories.module'; // 👈 检查路径拼写是否完全一致
 
 @Module({
   imports: [
