@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Post, Body } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, Delete, Param, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('products')
@@ -17,9 +17,9 @@ export class ProductsController {
       price: p.basePrice,
       image: p.image,
       stock: p.stock,
-      rating: p.rating,           // 👈 返回评分
-      reviewCount: p.reviewCount, // 👈 返回评论数
-      isPrime: p.isPrime,         // 👈 返回 Prime
+      rating: p.rating,
+      reviewCount: p.reviewCount,
+      isPrime: p.isPrime,
       title: p.translations[0]?.title || p.slug,
       description: p.translations[0]?.description || ''
     }));
@@ -31,7 +31,7 @@ export class ProductsController {
       data: {
         slug: body.slug || `product-${Date.now()}`,
         basePrice: body.price,
-        image: body.image || 'https://via.placeholder.com/150',
+        image: body.image, // 接收 Base64 字符串
         stock: body.stock || 100,
         rating: 5.0,
         reviewCount: 0,
@@ -41,5 +41,13 @@ export class ProductsController {
         }
       }
     });
+  }
+
+  // 👇 新增：删除商品接口
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+    return this.prisma.product.delete({ where: { id } });
   }
 }
