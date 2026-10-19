@@ -13,12 +13,16 @@ export async function fetchProducts(locale = 'en') {
   }
 }
 
-export async function createOrder(orderData) {
-  const res = await fetch(`${API_BASE}/orders`, {
+// ...
+export async function validateCoupon(code, cartTotal) {
+  const res = await fetch(`${API_BASE}/coupons/validate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(orderData)
+    body: JSON.stringify({ code, cartTotal })
   });
-  if (!res.ok) throw new Error('Failed to create order');
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Invalid coupon');
+  }
   return res.json();
 }
