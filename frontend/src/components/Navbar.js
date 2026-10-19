@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import AuthModal from './AuthModal'; // 👈 引入刚刚新建的弹窗组件
+import AuthModal from './AuthModal'; // 确保引入了弹窗组件
 
 const Navbar = ({ onSearch }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,7 +10,7 @@ const Navbar = ({ onSearch }) => {
   const { getCartItemsCount } = useCart();
   const navigate = useNavigate();
 
-  // 👈 新增：用户登录状态及弹窗控制
+  // 用户登录状态及弹窗控制
   const [showAuth, setShowAuth] = useState(false);
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('customer_info')));
 
@@ -18,6 +18,7 @@ const Navbar = ({ onSearch }) => {
     localStorage.removeItem('customer_token');
     localStorage.removeItem('customer_info');
     setUser(null);
+    navigate('/'); // 退出后回到首页
   };
 
   const handleSearch = (e) => {
@@ -37,7 +38,7 @@ const Navbar = ({ onSearch }) => {
 
   return (
     <>
-      <nav className="bg-gray-900 text-white">
+      <nav className="bg-gray-900 text-white relative z-40">
         {/* Main Navigation Bar */}
         <div className="bg-gray-900 border-b border-gray-700">
           <div className="max-w-7xl mx-auto px-2 sm:px-4">
@@ -49,7 +50,7 @@ const Navbar = ({ onSearch }) => {
                 </div>
               </Link>
 
-              {/* Delivery Location */}
+              {/* Delivery Location - Hidden on mobile */}
               <div className="hidden lg:flex items-center text-sm">
                 <div className="flex flex-col">
                   <span className="text-gray-300 text-xs">Deliver to</span>
@@ -102,41 +103,45 @@ const Navbar = ({ onSearch }) => {
                   <span>EN</span>
                 </div>
 
-                {/* 👈 Account & Lists 改造开始 */}
+                {/* Account & Lists 改造开始 */}
                 {user ? (
-                  <div className="hidden md:flex flex-col text-sm cursor-pointer group relative p-1 hover:border hover:border-white">
+                  <div className="hidden md:flex flex-col text-sm cursor-pointer group relative p-1 border border-transparent hover:border-white">
                     <span className="text-xs">Hello, {user.name}</span>
                     <span className="font-bold">Account & Lists</span>
                     
                     {/* 悬浮下拉菜单 */}
                     <div className="absolute top-full right-0 mt-1 w-48 bg-white text-black shadow-lg rounded hidden group-hover:block border z-50">
-                      <div className="p-4 border-b">
+                      <div className="p-4 border-b bg-gray-50 rounded-t">
                         <p className="font-bold text-sm truncate">{user.email}</p>
                       </div>
-                      <button onClick={handleLogout} className="w-full text-left p-3 text-sm hover:bg-gray-100 text-red-600">
-                        退出登录
+                      {/* 新增：跳转到我的订单 */}
+                      <Link to="/my-account" className="block w-full text-left p-3 text-sm hover:bg-gray-100 transition-colors">
+                        Your Orders
+                      </Link>
+                      <button onClick={handleLogout} className="w-full text-left p-3 text-sm hover:bg-gray-100 text-red-600 rounded-b transition-colors">
+                        Sign Out
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div 
                     onClick={() => setShowAuth(true)} 
-                    className="hidden md:flex flex-col text-sm cursor-pointer p-1 hover:border hover:border-white"
+                    className="hidden md:flex flex-col text-sm cursor-pointer p-1 border border-transparent hover:border-white"
                   >
                     <span className="text-xs">Hello, sign in</span>
                     <span className="font-bold">Account & Lists</span>
                   </div>
                 )}
-                {/* Account & Lists 改造结束 👈 */}
+                {/* Account & Lists 改造结束 */}
 
                 {/* Returns & Orders */}
-                <div className="hidden lg:flex flex-col text-sm cursor-pointer p-1 hover:border hover:border-white">
+                <div className="hidden lg:flex flex-col text-sm cursor-pointer p-1 border border-transparent hover:border-white">
                   <span className="text-xs">Returns</span>
                   <span className="font-bold">& Orders</span>
                 </div>
 
                 {/* Cart */}
-                <Link to="/cart" className="flex items-center relative p-1 hover:border hover:border-white">
+                <Link to="/cart" className="flex items-center relative p-1 border border-transparent hover:border-white">
                   <div className="relative">
                     <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6H19" />
@@ -185,7 +190,7 @@ const Navbar = ({ onSearch }) => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden bg-gray-800 border-t border-gray-700">
+          <div className="md:hidden bg-gray-800 border-t border-gray-700 absolute w-full">
             <div className="px-4 py-2 space-y-2">
               <Link to="/" className="block py-3 hover:bg-gray-700 px-3 rounded text-base" onClick={() => setIsMenuOpen(false)}>Home</Link>
               <Link to="/cart" className="block py-3 hover:bg-gray-700 px-3 rounded text-base" onClick={() => setIsMenuOpen(false)}>
@@ -198,6 +203,9 @@ const Navbar = ({ onSearch }) => {
                 {user ? (
                    <>
                     <div className="block py-3 hover:bg-gray-700 px-3 rounded text-base">Hello, {user.name}</div>
+                    <Link to="/my-account" className="block w-full text-left py-3 hover:bg-gray-700 px-3 rounded text-base" onClick={() => setIsMenuOpen(false)}>
+                      Your Orders
+                    </Link>
                     <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="block w-full text-left py-3 hover:bg-gray-700 px-3 rounded text-base text-red-400">Sign Out</button>
                    </>
                 ) : (
@@ -214,7 +222,7 @@ const Navbar = ({ onSearch }) => {
         )}
       </nav>
 
-      {/* 👈 挂载登录/注册弹窗 */}
+      {/* 挂载登录/注册弹窗 */}
       <AuthModal 
         isOpen={showAuth} 
         onClose={() => setShowAuth(false)} 
