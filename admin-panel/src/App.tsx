@@ -1,32 +1,54 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
-const API = 'http://localhost:3000';
+// 关键修改：优先读取 Render 上配置的 VITE_API_URL 环境变量，如果没有则回退到本地
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('admin_token') || '');
   const [orders, setOrders] = useState<any[]>([]);
   const [email, setEmail] = useState('admin@test.com');
   const [password, setPassword] = useState('admin123');
+  const [loading, setLoading] = useState(false);
 
   const login = async (e: any) => {
     e.preventDefault();
-    const res = await fetch(API + '/auth/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, password }) });
-    if (res.ok) {
-      const data = await res.json();
-      setToken(data.accessToken);
-      localStorage.setItem('admin_token', data.accessToken);
-    } else { alert('Login failed'); }
+    setLoading(true);
+    try {
+      const res = await fetch(API + '/auth/login', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({ email, password }) 
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setToken(data.accessToken);
+        localStorage.setItem('admin_token', data.accessToken);
+      } else { 
+        alert('登录失败，请检查账号密码或网络'); 
+      }
+    } catch (error) {
+      alert('网络请求失败，请确保后端已唤醒且跨域配置正确');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const load = () => {
+  const loadOrders = () => {
     if (!token) return;
-    fetch(API + '/orders', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()).then(setOrders);
+    fetch(API + '/orders', { headers: { Authorization: 'Bearer ' + token } })
+      .then(r => r.json())
+      .then(setOrders)
+      .catch(err => console.error("获取订单失败:", err));
   };
 
-  useEffect(() => { load(); }, [token]);
+  useEffect(() => { loadOrders(); }, [token]);
 
   const action = (id: string, type: string) => {
-    fetch(`${API}/orders/${id}/${type}`, { method: 'PATCH', headers: { Authorization: 'Bearer ' + token } }).then(load);
+    fetch(`${API}/orders/${id}/${type}`, { 
+      method: 'PATCH', 
+      headers: { Authorization: 'Bearer ' + token } 
+    }).then(loadOrders);
   };
 
   if (!token) return (
@@ -35,7 +57,9 @@ export default function App() {
       <form onSubmit={login}>
         <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" style={{padding: 8, marginBottom: 10}} /><br/>
         <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password" style={{padding: 8, marginBottom: 20}} /><br/>
-        <button type="submit" style={{padding: '10px 20px', cursor: 'pointer'}}>Login</button>
+        <button type="submit" disabled={loading} style={{padding: '10px 20px', cursor: 'pointer'}}>
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
       </form>
     </div>
   );
@@ -47,25 +71,31 @@ export default function App() {
         <button onClick={() => { setToken(''); localStorage.removeItem('admin_token'); }} style={{padding: '8px 16px', cursor: 'pointer'}}>Logout</button>
       </div>
       <table border={1} cellPadding={10} style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-        <thead style={{ background: '#f0f0f0' }}><tr><th>Order #</th><th>Customer</th><th>Address</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
+        <thead style={{ background: '#f0f0f0' }}>
+          <tr><th>Order #</th><th>Customer</th><th>Address</th><th>Total</th><th>Status</th><th>Action</th></tr>
+        </thead>
         <tbody>
-          {orders.map((o: any) => (
-            <tr key={o.id}>
-              <td>{o.orderNumber}</td>
-              <td>{o.customerName} <br/><small>{o.customerEmail}</small></td>
-              <td>{o.shippingAddr}</td>
-              <td>${o.totalAmount.toFixed(2)}</td>
-              <td><b>{o.status}</b></td>
-              <td>
-                {o.status === 'PENDING_REVIEW' && (
-                  <>
-                    <button onClick={() => action(o.id, 'approve')} style={{ background: 'green', color: 'white', padding: '5px 10px', marginRight: 5, border: 'none', cursor: 'pointer' }}>Approve</button>
-                    <button onClick={() => action(o.id, 'reject')} style={{ background: 'red', color: 'white', padding: '5px 10px', border: 'none', cursor: 'pointer' }}>Reject</button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
+          {orders.length === 0 ? (
+            <tr><td colSpan={6} style={{ textAlign: 'center' }}>No orders found.</td></tr>
+          ) : (
+            orders.map((o: any) => (
+              <tr key={o.id}>
+                <td>{o.orderNumber}</td>
+                <td>{o.customerName} <br/><small>{o.customerEmail}</small></td>
+                <td>{o.shippingAddr}</td>
+                <td>${o.totalAmount.toFixed(2)}</td>
+                <td><b>{o.status}</b></td>
+                <td>
+                  {o.status === 'PENDING_REVIEW' && (
+                    <>
+                      <button onClick={() => action(o.id, 'approve')} style={{ background: 'green', color: 'white', padding: '5px 10px', marginRight: 5, border: 'none', borderRadius: 3, cursor: 'pointer' }}>Approve</button>
+                      <button onClick={() => action(o.id, 'reject')} style={{ background: 'red', color: 'white', padding: '5px 10px', border: 'none', borderRadius: 3, cursor: 'pointer' }}>Reject</button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
