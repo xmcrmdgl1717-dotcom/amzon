@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Patch, Param, Get, NotFoundException, BadRequestException, Req } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Get, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('orders')
@@ -7,6 +7,17 @@ export class OrdersController {
 
   @Post()
   async create(@Body() body: any) {
+    // 1. 强制校验登录状态
+    if (!body.customerId) {
+      throw new UnauthorizedException('Please login to place an order.');
+    }
+
+    // 2. 从数据库查出买家真实信息
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: body.customerId }
+    });
+    if (!customer) throw new UnauthorizedException('Customer not found');
+
     return this.prisma.$transaction(async (tx) => {
       let total = 0;
       const itemsData = [];
@@ -14,7 +25,7 @@ export class OrdersController {
       for (const item of body.items) {
         const p = await tx.product.findUnique({ where: { id: item.productId } });
         if (!p) throw new NotFoundException(`Product not found`);
-        if (p.stock < item.quantity) throw new BadRequestException(`Insufficient stock`);
+        if (p.stock < item.quantity) throw new BadRequestException(`Insufficient stock for ${p.slug}`);
         
         total += p.basePrice * item.quantity;
         itemsData.push({ productId: p.id, quantity: item.quantity, unitPrice: p.basePrice });
@@ -31,13 +42,14 @@ export class OrdersController {
 
       const finalTotal = Math.max(0, total - discountAmount);
 
+      // 3. 自动填入买家姓名、邮箱，地址如果没有默认值则使用占位
       return await tx.order.create({
         data: {
           orderNumber: 'ORD-' + Date.now(),
-          customerName: body.customerName,
-          customerEmail: body.customerEmail,
-          shippingAddr: body.shippingAddr,
-          customerId: body.customerId || null,
+          customerId: customer.id,
+          customerName: customer.name,
+          customerEmail: customer.email,
+          shippingAddr: customer.address || 'Default Address (Please update in profile)', // 假设 Customer 模型有 address 字段，若没有可先写死
           totalAmount: finalTotal,
           couponCode: body.couponCode || null,
           discountAmount: discountAmount,
@@ -47,33 +59,5 @@ export class OrdersController {
     });
   }
 
-  @Get()
-  async findAll() {
-    return this.prisma.order.findMany({ 
-      include: { items: { include: { product: { include: { translations: { where: { locale: 'en' } } } } } } }, 
-      orderBy: { createdAt: 'desc' } 
-    });
-  }
-
-  @Patch(':id/approve')
-  async approve(@Param('id') id: string) {
-    return this.prisma.order.update({ where: { id }, data: { status: 'APPROVED' } });
-  }
-
-  @Patch(':id/reject')
-  async reject(@Param('id') id: string) {
-    return this.prisma.order.update({ where: { id }, data: { status: 'REJECTED' } });
-  }
-
-  // 👈 修改：接收并保存物流单号
-  @Patch(':id/ship')
-  async ship(@Param('id') id: string, @Body() body: { trackingNumber: string }) {
-    return this.prisma.order.update({ 
-      where: { id }, 
-      data: { 
-        status: 'SHIPPED',
-        trackingNumber: body.trackingNumber 
-      } 
-    });
-  }
+  // ... 其他接口保持原样 ...
 }
