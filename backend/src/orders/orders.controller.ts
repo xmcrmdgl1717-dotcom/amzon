@@ -22,7 +22,7 @@ export class OrdersController {
         customerName: body.customerName,
         customerEmail: body.customerEmail,
         shippingAddr: body.shippingAddr,
-        customerId: body.customerId || null, // 👈 接收买家 ID
+        customerId: body.customerId || null,
         totalAmount: total,
         items: { create: itemsData }
       }
@@ -31,7 +31,19 @@ export class OrdersController {
 
   @Get()
   async findAll() {
-    return this.prisma.order.findMany({ include: { items: true }, orderBy: { createdAt: 'desc' } });
+    // 👈 让订单列表带上关联的商品信息（包含标题、图片）
+    return this.prisma.order.findMany({ 
+      include: { 
+        items: { 
+          include: { 
+            product: { 
+              include: { translations: { where: { locale: 'en' } } } 
+            } 
+          } 
+        } 
+      }, 
+      orderBy: { createdAt: 'desc' } 
+    });
   }
 
   @Patch(':id/approve')
@@ -42,5 +54,11 @@ export class OrdersController {
   @Patch(':id/reject')
   async reject(@Param('id') id: string) {
     return this.prisma.order.update({ where: { id }, data: { status: 'REJECTED' } });
+  }
+
+  // 👈 新增发货接口
+  @Patch(':id/ship')
+  async ship(@Param('id') id: string) {
+    return this.prisma.order.update({ where: { id }, data: { status: 'SHIPPED' } });
   }
 }
