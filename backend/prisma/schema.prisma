@@ -8,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 👈 扩展角色
 enum Role {
   SUPER_ADMIN
   OPERATOR
@@ -29,17 +28,16 @@ model User {
   name         String   @default("Admin")
   role         Role     @default(OPERATOR)
   orders       Order[]  @relation("Reviewer")
-  logs         AuditLog[] // 👈 关联日志
+  logs         AuditLog[]
 }
 
-// 👈 新增：操作日志模型
 model AuditLog {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  action    String   // 动作：如 CREATE_PRODUCT, APPROVE_ORDER
-  targetId  String?  // 目标 ID
-  details   String?  // 详情描述
+  action    String
+  targetId  String?
+  details   String?
   createdAt DateTime @default(now())
 }
 
@@ -109,22 +107,11 @@ model Customer {
   createdAt    DateTime @default(now())
 }
 
-// ... 保持前面的代码不变 ...
-
-model Customer {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
-}
-
-// 👈 新增 Banner 模型
 model Banner {
   id        String   @id @default(uuid())
-  imageUrl  String   // 存储 Base64 或图片 URL
-  linkUrl   String?  // 点击跳转的链接
+  imageUrl  String
+  linkUrl   String?
   isActive  Boolean  @default(true)
-  order     Int      @default(0) // 排序
+  order     Int      @default(0)
   createdAt DateTime @default(now())
 }
