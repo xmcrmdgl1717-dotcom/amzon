@@ -8,24 +8,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 👈 扩展角色
 enum Role {
-  ADMIN
-  USER
+  SUPER_ADMIN
+  OPERATOR
+  SUPPORT
 }
 
 enum OrderStatus {
   PENDING_REVIEW
   APPROVED
   REJECTED
-  SHIPPED // 👈 新增发货状态
+  SHIPPED
 }
 
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
   passwordHash String
-  role         Role     @default(ADMIN)
+  name         String   @default("Admin")
+  role         Role     @default(OPERATOR)
   orders       Order[]  @relation("Reviewer")
+  logs         AuditLog[] // 👈 关联日志
+}
+
+// 👈 新增：操作日志模型
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String   // 动作：如 CREATE_PRODUCT, APPROVE_ORDER
+  targetId  String?  // 目标 ID
+  details   String?  // 详情描述
+  createdAt DateTime @default(now())
 }
 
 model Category {
