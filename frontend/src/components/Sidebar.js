@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
 
-// 👈 修复：补上了漏掉的 => 符号
 const Sidebar = ({ onCategoryFilter, activeCategory }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState([]);
 
-  // 从后端拉取真实分类
   useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/categories`)
-      .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(console.error);
+      .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+      })
+      .then(data => {
+        // 👈 安全兜底：确保拿到的绝对是数组
+        setCategories(Array.isArray(data) ? data : []);
+      })
+      .catch(err => {
+        console.error("获取分类失败", err);
+        setCategories([]); // 失败则设为空数组
+      });
   }, []);
 
   const handleCategoryClick = (id) => {
