@@ -9,14 +9,13 @@ export default function MyAccount() {
 
   useEffect(() => {
     if (!user) {
-      navigate('/'); // 未登录跳回首页
+      navigate('/');
       return;
     }
     
-    // 拉取当前用户的订单
     fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/customers/${user.id}/orders`)
       .then(res => res.json())
-      .then(data => setOrders(data))
+      .then(data => setOrders(Array.isArray(data) ? data : []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [user, navigate]);
@@ -65,7 +64,8 @@ export default function MyAccount() {
                   <div className="mt-2 sm:mt-0">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                       order.status === 'PENDING_REVIEW' ? 'bg-yellow-100 text-yellow-800' :
-                      order.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      order.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                      order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
                     }`}>
                       {order.status.replace('_', ' ')}
                     </span>
@@ -73,13 +73,21 @@ export default function MyAccount() {
                 </div>
                 
                 <div className="p-6">
+                  {/* 👈 新增：物流单号展示 */}
+                  {order.status === 'SHIPPED' && order.trackingNumber && (
+                    <div className="mb-4 bg-blue-50 border border-blue-200 p-3 rounded text-sm text-blue-800 flex items-center">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                      Your package has been shipped! Tracking Number: <strong className="ml-1">{order.trackingNumber}</strong>
+                    </div>
+                  )}
+
                   <h4 className="font-bold text-lg text-gray-900 mb-4">Items</h4>
                   <div className="space-y-4">
                     {order.items.map(item => (
                       <div key={item.id} className="flex items-center space-x-4">
-                        <img src={item.product?.image} alt={item.product?.slug} className="w-16 h-16 object-cover rounded border" />
+                        <img src={item.product?.image} alt="Product" className="w-16 h-16 object-cover rounded border" />
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">{item.product?.slug}</p>
+                          <p className="font-medium text-gray-900">{item.product?.translations?.[0]?.title || 'Product'}</p>
                           <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                         </div>
                         <div className="font-bold text-gray-900">${(item.unitPrice * item.quantity).toFixed(2)}</div>
