@@ -1,4 +1,4 @@
-﻿{
+{
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -12,5 +12,6 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true
-  }
+  },
+  "include": ["src/**/*"]
 }
