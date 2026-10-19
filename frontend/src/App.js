@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import MyAccount from './pages/MyAccount'; // 👈 顶部引入
+// 在 <Routes> 内部加上：
+<Route path="/my-account" element={<MyAccount />} />
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
