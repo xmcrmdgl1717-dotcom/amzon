@@ -5,8 +5,9 @@ import Orders from './pages/Orders';
 import Products from './pages/Products';
 import Customers from './pages/Customers';
 import Categories from './pages/Categories';
-import Staff from './pages/Staff';         // 👈 引入
-import AuditLogs from './pages/AuditLogs'; // 👈 引入
+import Staff from './pages/Staff';
+import AuditLogs from './pages/AuditLogs';
+import Banners from './pages/Banners'; // 👈 引入
 
 export const API = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000';
 
@@ -18,15 +19,16 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   const logout = () => { localStorage.removeItem('admin_token'); navigate('/login'); };
   
-  // 👈 新增菜单项
+  // 👈 新增菜单
   const navItems = [
     { path: '/dashboard', name: '仪表盘' },
     { path: '/orders', name: '订单管理' },
     { path: '/products', name: '商品管理' },
     { path: '/categories', name: '分类管理' },
+    { path: '/banners', name: '首页轮播图' }, // 新增
     { path: '/customers', name: '客户管理' },
-    { path: '/staff', name: '员工管理' },     // 新增
-    { path: '/audit-logs', name: '操作日志' }, // 新增
+    { path: '/staff', name: '员工管理' },
+    { path: '/audit-logs', name: '操作日志' },
   ];
 
   return (
@@ -63,9 +65,10 @@ export default function App() {
         <Route path="/orders" element={<Layout><Orders /></Layout>} />
         <Route path="/products" element={<Layout><Products /></Layout>} />
         <Route path="/categories" element={<Layout><Categories /></Layout>} />
+        <Route path="/banners" element={<Layout><Banners /></Layout>} /> {/* 👈 新增路由 */}
         <Route path="/customers" element={<Layout><Customers /></Layout>} />
-        <Route path="/staff" element={<Layout><Staff /></Layout>} />             {/* 👈 新增路由 */}
-        <Route path="/audit-logs" element={<Layout><AuditLogs /></Layout>} />     {/* 👈 新增路由 */}
+        <Route path="/staff" element={<Layout><Staff /></Layout>} />
+        <Route path="/audit-logs" element={<Layout><AuditLogs /></Layout>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
