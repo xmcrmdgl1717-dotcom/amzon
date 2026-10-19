@@ -1,7 +1,5 @@
+// 👈 所有的 import 都必须放在最顶部
 import React, { useState } from 'react';
-import MyAccount from './pages/MyAccount'; // 👈 顶部引入
-// 在 <Routes> 内部加上：
-<Route path="/my-account" element={<MyAccount />} />
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
@@ -13,11 +11,11 @@ import CustomerService from './pages/CustomerService';
 import Registry from './pages/Registry';
 import GiftCards from './pages/GiftCards';
 import Sell from './pages/Sell';
+import MyAccount from './pages/MyAccount'; // 确保引入了 MyAccount
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchCategory, setSearchCategory] = useState('All');
-  // 新增：多语言状态，默认英语
   const [locale, setLocale] = useState('en');
 
   const handleSearch = (query, category) => {
@@ -29,7 +27,6 @@ function App() {
     <CartProvider>
       <Router>
         <div className="min-h-screen flex flex-col">
-          {/* 将 locale 和 setLocale 传给 Navbar */}
           <Navbar 
             onSearch={handleSearch} 
             locale={locale} 
@@ -37,7 +34,6 @@ function App() {
           />
           <main className="flex-1">
             <Routes>
-              {/* 将 locale 传给 Home */}
               <Route path="/" element={
                 <Home 
                   searchQuery={searchQuery} 
@@ -46,6 +42,7 @@ function App() {
                 />
               } />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/my-account" element={<MyAccount />} /> {/* 确保加了路由 */}
               <Route path="/deals" element={<TodaysDeals />} />
               <Route path="/customer-service" element={<CustomerService />} />
               <Route path="/registry" element={<Registry />} />
