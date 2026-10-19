@@ -3,7 +3,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Orders from './pages/Orders';
 import Products from './pages/Products';
-import Customers from './pages/Customers'; // 👈 引入客户管理页面
+import Customers from './pages/Customers';
+import Categories from './pages/Categories'; // 👈 引入分类
 
 export const API = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000';
 
@@ -11,58 +12,37 @@ function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem('admin_token');
-
   if (!token) return <Navigate to="/login" replace />;
 
-  const logout = () => {
-    localStorage.removeItem('admin_token');
-    navigate('/login');
-  };
-
-  // 👈 在侧边栏数组中新增客户管理
+  const logout = () => { localStorage.removeItem('admin_token'); navigate('/login'); };
   const navItems = [
     { path: '/dashboard', name: '仪表盘' },
     { path: '/orders', name: '订单管理' },
     { path: '/products', name: '商品管理' },
-    { path: '/customers', name: '客户管理' }, 
+    { path: '/categories', name: '分类管理' }, // 👈 新增菜单
+    { path: '/customers', name: '客户管理' },
   ];
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* 侧边栏 */}
       <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="h-16 flex items-center justify-center text-xl font-bold border-b border-gray-800">
-          Seller Central
-        </div>
+        <div className="h-16 flex items-center justify-center text-xl font-bold border-b border-gray-800">Seller Central</div>
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`block px-4 py-2 rounded-md transition-colors ${
-                location.pathname === item.path ? 'bg-blue-600 text-white' : 'hover:bg-gray-800 text-gray-300'
-              }`}
-            >
+            <Link key={item.path} to={item.path} className={`block px-4 py-2 rounded-md transition-colors ${location.pathname === item.path ? 'bg-blue-600 text-white' : 'hover:bg-gray-800 text-gray-300'}`}>
               {item.name}
             </Link>
           ))}
         </nav>
         <div className="p-4 border-t border-gray-800">
-          <button onClick={logout} className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-md transition-colors">
-            退出登录
-          </button>
+          <button onClick={logout} className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-md">退出登录</button>
         </div>
       </aside>
-
-      {/* 主内容区 */}
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white shadow-sm flex items-center px-8 justify-between">
           <h2 className="text-xl font-semibold text-gray-800">管理后台</h2>
-          <div className="text-sm text-gray-500">admin@test.com</div>
         </header>
-        <div className="flex-1 overflow-auto p-8">
-          {children}
-        </div>
+        <div className="flex-1 overflow-auto p-8">{children}</div>
       </main>
     </div>
   );
@@ -76,8 +56,8 @@ export default function App() {
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/orders" element={<Layout><Orders /></Layout>} />
         <Route path="/products" element={<Layout><Products /></Layout>} />
-        {/* 👈 新增客户管理路由 */}
-        <Route path="/customers" element={<Layout><Customers /></Layout>} /> 
+        <Route path="/categories" element={<Layout><Categories /></Layout>} /> {/* 👈 新增路由 */}
+        <Route path="/customers" element={<Layout><Customers /></Layout>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
