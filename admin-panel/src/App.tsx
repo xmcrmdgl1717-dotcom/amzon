@@ -1,157 +1,81 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Orders from './pages/Orders';
+import Products from './pages/Products';
 
-// 读取 Render 上的环境变量，如果没读到则默认连本地
-const API = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000';
-console.log('当前使用的后端 API 地址是:', API);
+export const API = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000';
 
-export default function App() {
-  const [token, setToken] = useState(localStorage.getItem('admin_token') || '');
-  const [orders, setOrders] = useState<any[]>([]);
-  const [email, setEmail] = useState('admin@test.com');
-  const [password, setPassword] = useState('admin123');
-  const [loading, setLoading] = useState(false);
+function Layout({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const token = localStorage.getItem('admin_token');
 
-  const login = async (e: any) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch(API + '/auth/login', { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({ email, password }) 
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        setToken(data.accessToken);
-        localStorage.setItem('admin_token', data.accessToken);
-      } else { 
-        // 如果后端返回 500，或者账号密码错误
-        const errData = await res.json().catch(() => ({}));
-        alert(`登录失败，状态码: ${res.status}。\n后端返回信息: ${errData.message || '请检查数据库或后端日志'}`); 
-      }
-    } catch (error: any) {
-      console.error('登录请求详细错误:', error);
-      alert(`网络请求失败: ${error.message}\n\n可能原因：\n1. Render 免费后端正在冷启动，请先去新标签页访问 ${API}/products 唤醒它。\n2. CORS 跨域被拦截。请按 F12 查看 Console 面板。`);
-    } finally {
-      setLoading(false);
-    }
+  if (!token) return <Navigate to="/login" replace />;
+
+  const logout = () => {
+    localStorage.removeItem('admin_token');
+    navigate('/login');
   };
 
-  const loadOrders = () => {
-    if (!token) return;
-    fetch(API + '/orders', { headers: { Authorization: 'Bearer ' + token } })
-      .then(r => {
-        if(!r.ok) throw new Error('获取订单失败，可能 Token 过期');
-        return r.json();
-      })
-      .then(setOrders)
-      .catch(err => {
-        console.error("获取订单错误:", err);
-        alert("获取订单失败，请尝试重新登录");
-        // 如果 token 失效，清理本地存储并退回登录页
-        setToken('');
-        localStorage.removeItem('admin_token');
-      });
-  };
-
-  useEffect(() => { 
-    loadOrders(); 
-  }, [token]);
-
-  const action = (id: string, type: string) => {
-    fetch(`${API}/orders/${id}/${type}`, { 
-      method: 'PATCH', 
-      headers: { Authorization: 'Bearer ' + token } 
-    }).then(() => loadOrders());
-  };
-
-  if (!token) {
-    return (
-      <div style={{ padding: 50, textAlign: 'center', fontFamily: 'sans-serif' }}>
-        <h1>Admin Login</h1>
-        <form onSubmit={login}>
-          <input 
-            value={email} 
-            onChange={e => setEmail(e.target.value)} 
-            placeholder="Email" 
-            style={{ padding: 8, marginBottom: 10, width: '250px' }} 
-          /><br/>
-          <input 
-            value={password} 
-            onChange={e => setPassword(e.target.value)} 
-            type="password" 
-            placeholder="Password" 
-            style={{ padding: 8, marginBottom: 20, width: '250px' }} 
-          /><br/>
-          <button 
-            type="submit" 
-            disabled={loading} 
-            style={{ padding: '10px 20px', cursor: loading ? 'not-allowed' : 'pointer' }}
-          >
-            {loading ? '正在连接后端...' : 'Login'}
-          </button>
-        </form>
-      </div>
-    );
-  }
+  const navItems = [
+    { path: '/dashboard', name: '仪表盘' },
+    { path: '/orders', name: '订单管理' },
+    { path: '/products', name: '商品管理' },
+  ];
 
   return (
-    <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-        <h1>Order Management</h1>
-        <button 
-          onClick={() => { setToken(''); localStorage.removeItem('admin_token'); }} 
-          style={{ padding: '8px 16px', cursor: 'pointer' }}
-        >
-          Logout
-        </button>
-      </div>
-      <table border={1} cellPadding={10} style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-        <thead style={{ background: '#f0f0f0' }}>
-          <tr>
-            <th>Order #</th>
-            <th>Customer</th>
-            <th>Address</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.length === 0 ? (
-            <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>暂无订单</td></tr>
-          ) : (
-            orders.map((o: any) => (
-              <tr key={o.id}>
-                <td>{o.orderNumber}</td>
-                <td>{o.customerName} <br/><small style={{color: '#666'}}>{o.customerEmail}</small></td>
-                <td>{o.shippingAddr}</td>
-                <td>${o.totalAmount.toFixed(2)}</td>
-                <td><b>{o.status}</b></td>
-                <td>
-                  {o.status === 'PENDING_REVIEW' && (
-                    <>
-                      <button 
-                        onClick={() => action(o.id, 'approve')} 
-                        style={{ background: 'green', color: 'white', padding: '5px 10px', marginRight: 5, border: 'none', borderRadius: 3, cursor: 'pointer' }}
-                      >
-                        Approve
-                      </button>
-                      <button 
-                        onClick={() => action(o.id, 'reject')} 
-                        style={{ background: 'red', color: 'white', padding: '5px 10px', border: 'none', borderRadius: 3, cursor: 'pointer' }}
-                      >
-                        Reject
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+    <div className="flex h-screen bg-gray-100">
+      {/* 侧边栏 */}
+      <aside className="w-64 bg-gray-900 text-white flex flex-col">
+        <div className="h-16 flex items-center justify-center text-xl font-bold border-b border-gray-800">
+          Seller Central
+        </div>
+        <nav className="flex-1 p-4 space-y-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`block px-4 py-2 rounded-md transition-colors ${
+                location.pathname === item.path ? 'bg-blue-600 text-white' : 'hover:bg-gray-800 text-gray-300'
+              }`}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-gray-800">
+          <button onClick={logout} className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-md transition-colors">
+            退出登录
+          </button>
+        </div>
+      </aside>
+
+      {/* 主内容区 */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-16 bg-white shadow-sm flex items-center px-8 justify-between">
+          <h2 className="text-xl font-semibold text-gray-800">管理后台</h2>
+          <div className="text-sm text-gray-500">admin@test.com</div>
+        </header>
+        <div className="flex-1 overflow-auto p-8">
+          {children}
+        </div>
+      </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+        <Route path="/orders" element={<Layout><Orders /></Layout>} />
+        <Route path="/products" element={<Layout><Products /></Layout>} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
