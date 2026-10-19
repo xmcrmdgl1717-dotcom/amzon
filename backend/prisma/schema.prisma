@@ -26,16 +26,25 @@ model User {
   orders       Order[]  @relation("Reviewer")
 }
 
+// 👈 新增：分类模型
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  products Product[]
+}
+
 model Product {
   id           String               @id @default(uuid())
   slug         String               @unique
   basePrice    Float
   image        String
   stock        Int                  @default(100)
-  // 👇 新增字段，完美还原前端 UI
   rating       Float                @default(4.5)
   reviewCount  Int                  @default(120)
   isPrime      Boolean              @default(true)
+  // 👈 新增：关联分类，允许为空
+  categoryId   String?
+  category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   
   translations ProductTranslation[]
   orderItems   OrderItem[]
@@ -57,6 +66,7 @@ model Order {
   customerName  String
   customerEmail String
   shippingAddr  String
+  customerId    String?
   locale        String      @default("en")
   totalAmount   Float
   rejectReason  String?
@@ -64,9 +74,6 @@ model Order {
   reviewedBy    User?       @relation("Reviewer", fields: [reviewedById], references: [id])
   items         OrderItem[]
   createdAt     DateTime    @default(now())
-  customerEmail String
-  customerId    String?  // 👈 新增可选关联
-  // ...
 }
 
 model OrderItem {
@@ -78,8 +85,6 @@ model OrderItem {
   quantity  Int
   unitPrice Float
 }
-
-// ... 保留之前的模型 ...
 
 model Customer {
   id           String   @id @default(uuid())
