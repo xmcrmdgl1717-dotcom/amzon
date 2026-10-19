@@ -18,11 +18,9 @@ export class OrdersController {
         
         total += p.basePrice * item.quantity;
         itemsData.push({ productId: p.id, quantity: item.quantity, unitPrice: p.basePrice });
-        
         await tx.product.update({ where: { id: p.id }, data: { stock: { decrement: item.quantity } } });
       }
       
-      // 👈 处理优惠券抵扣
       let discountAmount = 0;
       if (body.couponCode) {
         const coupon = await tx.coupon.findUnique({ where: { code: body.couponCode.toUpperCase() } });
@@ -33,32 +31,32 @@ export class OrdersController {
 
       const finalTotal = Math.max(0, total - discountAmount);
 
-      const order = await tx.order.create({
+      return await tx.order.create({
         data: {
           orderNumber: 'ORD-' + Date.now(),
           customerName: body.customerName,
           customerEmail: body.customerEmail,
           shippingAddr: body.shippingAddr,
           customerId: body.customerId || null,
-          totalAmount: finalTotal, // 使用扣减后的金额
+          totalAmount: finalTotal,
           couponCode: body.couponCode || null,
           discountAmount: discountAmount,
           items: { create: itemsData }
         }
       });
-
-      return order;
     });
   }
 
-  // ... 其他 Get / Patch 代码保持不变
   @Get()
   async findAll() {
-    return this.prisma.order.findMany({ include: { items: { include: { product: { include: { translations: { where: { locale: 'en' } } } } } } }, orderBy: { createdAt: 'desc' } });
+    return this.prisma.order.findMany({ 
+      include: { items: { include: { product: { include: { translations: { where: { locale: 'en' } } } } } } }, 
+      orderBy: { createdAt: 'desc' } 
+    });
   }
 
   @Patch(':id/approve')
-  async approve(@Param('id') id: string, @Req() req: any) {
+  async approve(@Param('id') id: string) {
     return this.prisma.order.update({ where: { id }, data: { status: 'APPROVED' } });
   }
 
@@ -67,8 +65,15 @@ export class OrdersController {
     return this.prisma.order.update({ where: { id }, data: { status: 'REJECTED' } });
   }
 
+  // 👈 修改：接收并保存物流单号
   @Patch(':id/ship')
-  async ship(@Param('id') id: string) {
-    return this.prisma.order.update({ where: { id }, data: { status: 'SHIPPED' } });
+  async ship(@Param('id') id: string, @Body() body: { trackingNumber: string }) {
+    return this.prisma.order.update({ 
+      where: { id }, 
+      data: { 
+        status: 'SHIPPED',
+        trackingNumber: body.trackingNumber 
+      } 
+    });
   }
 }
