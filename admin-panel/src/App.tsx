@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 // 关键修改：优先读取 Render 上配置的 VITE_API_URL 环境变量，如果没有则回退到本地
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('admin_token') || '');
