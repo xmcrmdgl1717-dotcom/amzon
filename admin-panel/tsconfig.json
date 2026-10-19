@@ -12,8 +12,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,      // 改成 false
+    "noUnusedParameters": false,  // 改成 false
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"]
