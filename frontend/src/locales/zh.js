@@ -17,3 +17,10 @@ export const zh = {
   allProducts: "所有商品",
   results: "个结果"
 };
+  // ... 之前的
+  inStock: "有货",
+  outOfStock: "缺货",
+  description: "商品详情",
+  backToResults: "返回上一页",
+  buyNow: "立即购买",
+  freeDelivery: "明日免费送达"
