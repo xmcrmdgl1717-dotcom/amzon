@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { createOrder } from '../api';
 
 const CART_ACTIONS = {
@@ -13,26 +13,14 @@ const cartReducer = (state, action) => {
     case CART_ACTIONS.ADD_TO_CART:
       const existingItem = state.items.find(item => item.id === action.payload.id);
       if (existingItem) {
-        return {
-          ...state,
-          items: state.items.map(item =>
-            item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item
-          )
-        };
+        return { ...state, items: state.items.map(item => item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item) };
       }
       return { ...state, items: [...state.items, { ...action.payload, quantity: 1 }] };
     case CART_ACTIONS.REMOVE_FROM_CART:
       return { ...state, items: state.items.filter(item => item.id !== action.payload) };
     case CART_ACTIONS.UPDATE_QUANTITY:
-      if (action.payload.quantity <= 0) {
-        return { ...state, items: state.items.filter(item => item.id !== action.payload.id) };
-      }
-      return {
-        ...state,
-        items: state.items.map(item =>
-          item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item
-        )
-      };
+      if (action.payload.quantity <= 0) return { ...state, items: state.items.filter(item => item.id !== action.payload.id) };
+      return { ...state, items: state.items.map(item => item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item) };
     case CART_ACTIONS.CLEAR_CART:
       return { ...state, items: [] };
     default:
@@ -41,8 +29,18 @@ const cartReducer = (state, action) => {
 };
 
 const CartContext = createContext();
+
 export const CartProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] });
+  // 👈 初始化时从 localStorage 读取数据
+  const [state, dispatch] = useReducer(cartReducer, { items: [] }, () => {
+    const localData = localStorage.getItem('amazon_cart');
+    return localData ? JSON.parse(localData) : { items: [] };
+  });
+
+  // 👈 状态变化时，自动同步到 localStorage
+  useEffect(() => {
+    localStorage.setItem('amazon_cart', JSON.stringify(state));
+  }, [state]);
 
   const addToCart = (product) => dispatch({ type: CART_ACTIONS.ADD_TO_CART, payload: product });
   const removeFromCart = (productId) => dispatch({ type: CART_ACTIONS.REMOVE_FROM_CART, payload: productId });
@@ -54,15 +52,19 @@ export const CartProvider = ({ children }) => {
   const isInCart = (productId) => state.items.some(item => item.id === productId);
   const getItemQuantity = (productId) => state.items.find(item => item.id === productId)?.quantity || 0;
 
-  // 【新增】连接后端 API 下单
   const checkout = async (customerInfo) => {
+    // 👈 获取当前登录买家信息，绑定到订单上
+    const user = JSON.parse(localStorage.getItem('customer_info'));
+    
     const orderPayload = {
       ...customerInfo,
+      customerId: user?.id || null, // 如果已登录，带上 ID
       items: state.items.map(item => ({
         productId: item.id,
         quantity: item.quantity
       }))
     };
+    
     const response = await createOrder(orderPayload);
     clearCart();
     return response;
