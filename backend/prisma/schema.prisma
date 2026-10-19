@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -26,7 +27,6 @@ model User {
   orders       Order[]  @relation("Reviewer")
 }
 
-// 👈 新增：分类模型
 model Category {
   id       String    @id @default(uuid())
   name     String    @unique
@@ -42,7 +42,6 @@ model Product {
   rating       Float                @default(4.5)
   reviewCount  Int                  @default(120)
   isPrime      Boolean              @default(true)
-  // 👈 新增：关联分类，允许为空
   categoryId   String?
   category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   
