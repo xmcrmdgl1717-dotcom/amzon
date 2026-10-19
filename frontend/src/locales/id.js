@@ -17,3 +17,10 @@ export const id = {
   allProducts: "Semua Produk",
   results: "hasil"
 };
+  // ... 之前的
+  inStock: "Stok Tersedia",
+  outOfStock: "Stok Habis",
+  description: "Tentang item ini",
+  backToResults: "Kembali ke hasil",
+  buyNow: "Beli Sekarang",
+  freeDelivery: "Gratis pengiriman Besok"
