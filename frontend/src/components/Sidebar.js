@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-const Sidebar = ({ onCategoryFilter, activeCategory }) {
+// 👈 修复：补上了漏掉的 => 符号
+const Sidebar = ({ onCategoryFilter, activeCategory }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState([]);
 
-  // 👈 从后端拉取真实分类
+  // 从后端拉取真实分类
   useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/categories`)
       .then(res => res.json())
