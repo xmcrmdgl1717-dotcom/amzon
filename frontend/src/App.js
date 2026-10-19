@@ -14,6 +14,8 @@ import Sell from './pages/Sell';
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchCategory, setSearchCategory] = useState('All');
+  // 新增：多语言状态，默认英语
+  const [locale, setLocale] = useState('en');
 
   const handleSearch = (query, category) => {
     setSearchQuery(query);
@@ -24,10 +26,22 @@ function App() {
     <CartProvider>
       <Router>
         <div className="min-h-screen flex flex-col">
-          <Navbar onSearch={handleSearch} />
+          {/* 将 locale 和 setLocale 传给 Navbar */}
+          <Navbar 
+            onSearch={handleSearch} 
+            locale={locale} 
+            setLocale={setLocale} 
+          />
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={<Home searchQuery={searchQuery} searchCategory={searchCategory} />} />
+              {/* 将 locale 传给 Home */}
+              <Route path="/" element={
+                <Home 
+                  searchQuery={searchQuery} 
+                  searchCategory={searchCategory} 
+                  locale={locale}
+                />
+              } />
               <Route path="/cart" element={<Cart />} />
               <Route path="/deals" element={<TodaysDeals />} />
               <Route path="/customer-service" element={<CustomerService />} />
