@@ -23,7 +23,7 @@ const ProductGrid = ({ categoryId, searchQuery, locale }) => {
       .finally(() => setLoading(false));
   }, [locale]);
 
-  // 过滤逻辑
+  // 过滤逻辑：分类与搜索词
   const filteredProducts = useMemo(() => {
     let products = productsData;
 
@@ -61,14 +61,16 @@ const ProductGrid = ({ categoryId, searchQuery, locale }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (loading) return <div className="p-10 text-center text-lg">Loading products...</div>;
+  if (loading) return <div className="p-10 text-center text-lg text-gray-500">Loading products...</div>;
 
   return (
-    <div className="flex-1 p-2 sm:p-4">
+    // 外层容器：增加 pb-24 留出底部导航空间，md:pb-4 恢复PC端边距
+    <div className="flex-1 p-2 sm:p-4 pb-24 md:pb-4">
+      
       {/* 头部排序和统计 */}
       <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
             {searchQuery ? `Search results for "${searchQuery}"` : t.allProducts}
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
@@ -90,28 +92,31 @@ const ProductGrid = ({ categoryId, searchQuery, locale }) => {
         </div>
       </div>
 
-      {/* 商品网格：把 locale 传给 ProductCard */}
+      {/* 商品网格：移动端 2 列，平板 3 列，PC 4 列 */}
       {sortedProducts.length > 0 ? (
-        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
           {currentProducts.map((product) => (
             <ProductCard key={product.id} product={product} locale={locale} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 sm:py-12">
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
           <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No products found</h3>
+          <p className="text-gray-500">Try adjusting your search or category filter.</p>
         </div>
       )}
 
-      {/* 分页 */}
+      {/* 分页控件 */}
       {totalPages > 1 && (
-        <div className="flex flex-wrap justify-center items-center gap-2 mb-4">
+        <div className="flex flex-wrap justify-center items-center gap-2 mb-6">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-2 sm:px-3 py-2 rounded-md text-sm ${currentPage === 1 ? 'bg-gray-200 text-gray-400' : 'bg-white border text-gray-700'}`}
+            className={`px-3 py-1.5 rounded-md text-sm ${
+              currentPage === 1 ? 'bg-gray-200 text-gray-400' : 'bg-white border text-gray-700 hover:bg-gray-50'
+            }`}
           >
-            Previous
+            Prev
           </button>
           
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
@@ -120,7 +125,9 @@ const ProductGrid = ({ categoryId, searchQuery, locale }) => {
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
-                  className={`px-2 sm:px-3 py-2 rounded-md text-sm ${currentPage === page ? 'bg-blue-600 text-white' : 'bg-white border text-gray-700'}`}
+                  className={`px-3 py-1.5 rounded-md text-sm ${
+                    currentPage === page ? 'bg-blue-600 text-white' : 'bg-white border text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
                   {page}
                 </button>
@@ -132,7 +139,9 @@ const ProductGrid = ({ categoryId, searchQuery, locale }) => {
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-2 sm:px-3 py-2 rounded-md text-sm ${currentPage === totalPages ? 'bg-gray-200 text-gray-400' : 'bg-white border text-gray-700'}`}
+            className={`px-3 py-1.5 rounded-md text-sm ${
+              currentPage === totalPages ? 'bg-gray-200 text-gray-400' : 'bg-white border text-gray-700 hover:bg-gray-50'
+            }`}
           >
             Next
           </button>
@@ -140,7 +149,7 @@ const ProductGrid = ({ categoryId, searchQuery, locale }) => {
       )}
 
       {/* 底部统计 */}
-      <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-600">
+      <div className="text-center text-xs sm:text-sm text-gray-500">
         Showing {startIndex + 1}-{Math.min(endIndex, sortedProducts.length)} of {sortedProducts.length} {t.results}
       </div>
     </div>
