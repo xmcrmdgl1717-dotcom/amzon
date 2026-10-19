@@ -1,14 +1,18 @@
-// CRA 项目必须以 REACT_APP_ 开头读取环境变量
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-// 获取商品（支持多语言）
 export async function fetchProducts(locale = 'en') {
-  const res = await fetch(`${API_BASE}/products?locale=${locale}`);
-  if (!res.ok) throw new Error('Failed to fetch products');
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE}/products?locale=${locale}`);
+    // 👈 如果后端崩了（500等），返回空数组，不要抛错导致白屏
+    if (!res.ok) return []; 
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error('Fetch products failed:', err);
+    return []; // 网络错误也返回空数组
+  }
 }
 
-// 提交订单
 export async function createOrder(orderData) {
   const res = await fetch(`${API_BASE}/orders`, {
     method: 'POST',
