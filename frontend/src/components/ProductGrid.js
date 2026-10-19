@@ -1,61 +1,60 @@
-// src/components/ProductGrid.js
 import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
-import { fetchProducts } from '../api'; // 引入 API
+import { fetchProducts } from '../api';
 
-const ProductGrid = ({ categoryFilter, onClearFilter, searchQuery, searchCategory }) => {
+// 删除了未使用的 props，避免 ESLint 报错
+const ProductGrid = ({ searchQuery }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState('featured');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
 
   useEffect(() => {
+    // 从后端 API 拉取真实数据
     fetchProducts('en')
       .then(data => setProducts(data))
-      .catch(console.error)
+      .catch(err => {
+        console.error("获取商品失败:", err);
+        setProducts([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  // 注意：因为现在数据是动态的，原本写死的 ID 过滤（如 [4, 15, 16]）可能失效
-  // 这里保留了你的过滤结构，但建议后续根据后端的 category 字段做真实过滤
+  // 搜索过滤逻辑
   const filteredProducts = useMemo(() => {
     let result = products;
-    if (searchQuery) {
-      result = result.filter(p => `${p.title} ${p.description}`.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (searchQuery && searchQuery.trim() !== '') {
+      result = result.filter(p => 
+        `${p.title} ${p.description}`.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
     return result;
   }, [products, searchQuery]);
 
-  const sortedProducts = useMemo(() => {
-    const result = [...filteredProducts];
-    if (sortBy === 'price-low') result.sort((a, b) => a.price - b.price);
-    if (sortBy === 'price-high') result.sort((a, b) => b.price - a.price);
-    return result;
-  }, [filteredProducts, sortBy]);
-
-  const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
-  const currentProducts = sortedProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  if (loading) return <div className="p-10 text-center">Loading products from API...</div>;
+  if (loading) {
+    return <div className="p-10 text-center text-lg">Loading products from API...</div>;
+  }
 
   return (
     <div className="flex-1 p-2 sm:p-4">
+      {/* 头部信息 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold mb-2">Products</h1>
-          <p className="text-sm text-gray-600">{sortedProducts.length} results</p>
+          <h1 className="text-xl sm:text-2xl font-bold mb-2">All Products</h1>
+          <p className="text-sm text-gray-600">{filteredProducts.length} results</p>
         </div>
       </div>
 
-      {currentProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {currentProducts.map(product => (
+      {/* 商品网格 */}
+      {filteredProducts.length > 0 ? (
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
+          {filteredProducts.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">No products found.</div>
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+          <p className="text-gray-600">Try adjusting your search.</p>
+        </div>
       )}
     </div>
   );
