@@ -17,6 +17,7 @@ enum OrderStatus {
   PENDING_REVIEW
   APPROVED
   REJECTED
+  SHIPPED // 👈 新增发货状态
 }
 
 model User {
