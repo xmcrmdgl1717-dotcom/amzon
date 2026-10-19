@@ -6,8 +6,9 @@ import { ProductsController } from './products/products.controller';
 import { OrdersController } from './orders/orders.controller';
 import { CustomersModule } from './customers/customers.module';
 import { CategoriesModule } from './categories/categories.module';
-import { AuditModule } from './audit/audit.module'; // 👈 引入
-import { StaffModule } from './staff/staff.module'; // 👈 引入
+import { AuditModule } from './audit/audit.module';
+import { StaffModule } from './staff/staff.module';
+import { BannersModule } from './banners/banners.module'; // 👈 引入
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { StaffModule } from './staff/staff.module'; // 👈 引入
     CustomersModule,
     CategoriesModule,
     AuditModule,
-    StaffModule
+    StaffModule,
+    BannersModule // 👈 添加
   ],
   controllers: [AuthController, ProductsController, OrdersController],
   providers: [PrismaService],
