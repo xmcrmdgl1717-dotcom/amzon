@@ -6,9 +6,13 @@ async function main() {
   const hash = await bcrypt.hash('admin123', 10);
   await prisma.user.upsert({
     where: { email: 'admin@test.com' },
-    update: {},
-    create: { email: 'admin@test.com', passwordHash: hash, role: 'ADMIN' },
+    update: { role: 'SUPER_ADMIN' }, // 👈 确保是超管
+    create: { email: 'admin@test.com', passwordHash: hash, name: 'Super Admin', role: 'SUPER_ADMIN' },
   });
+  console.log('Seed completed!');
+}
+main().finally(() => prisma.$disconnect());
+
 
   // 👈 预置几个基础分类
   const electronics = await prisma.category.upsert({
