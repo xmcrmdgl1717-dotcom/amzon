@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { fetchProducts } from '../api';
 
-const ProductGrid = ({ searchQuery, locale }) {
+// 注意这里的 => 符号，千万别漏了
+const ProductGrid = ({ searchQuery, locale }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
