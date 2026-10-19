@@ -10,7 +10,7 @@ import { AuditModule } from './audit/audit.module';
 import { StaffModule } from './staff/staff.module';
 import { BannersModule } from './banners/banners.module'; // 👈 引入
 import { ReviewsModule } from './reviews/reviews.module'; // 👈 新增
-
+import { CouponsModule } from './coupons/coupons.module'; // 👈 引入
 @Module({
   imports: [
     JwtModule.register({ secret: 'SECRET_KEY', signOptions: { expiresIn: '7d' } }),
@@ -20,6 +20,7 @@ import { ReviewsModule } from './reviews/reviews.module'; // 👈 新增
     StaffModule,
     BannersModule // 👈 添加
     ReviewsModule // 👈 添加
+     CouponsModule // 👈 添加
   ],
   controllers: [AuthController, ProductsController, OrdersController],
   providers: [PrismaService],
