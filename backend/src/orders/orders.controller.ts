@@ -1,9 +1,10 @@
-﻿import { Controller, Post, Body, Patch, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Get, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+
 @Controller('orders')
 export class OrdersController {
   constructor(private prisma: PrismaService) {}
-  
+
   @Post()
   async create(@Body() body: any) {
     let total = 0;
@@ -21,6 +22,7 @@ export class OrdersController {
         customerName: body.customerName,
         customerEmail: body.customerEmail,
         shippingAddr: body.shippingAddr,
+        customerId: body.customerId || null, // 👈 接收买家 ID
         totalAmount: total,
         items: { create: itemsData }
       }
@@ -42,15 +44,3 @@ export class OrdersController {
     return this.prisma.order.update({ where: { id }, data: { status: 'REJECTED' } });
   }
 }
-import { Controller, Post, Body, Patch, Param, Get, NotFoundException } from '@nestjs/common';
-// ... 原来的代码保持不变 ...
-
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id },
-      include: { items: { include: { product: true } } },
-    });
-    if (!order) throw new NotFoundException('Order not found');
-    return order;
-  }
