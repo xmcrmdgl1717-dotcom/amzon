@@ -15,12 +15,12 @@ export const id = {
   categories: "Belanja berdasarkan Kategori",
   showAll: "Tampilkan Semua Produk",
   allProducts: "Semua Produk",
-  results: "hasil"
-};
-  // ... 之前的
+  results: "hasil",
+  // 新增的详情页字段
   inStock: "Stok Tersedia",
   outOfStock: "Stok Habis",
   description: "Tentang item ini",
   backToResults: "Kembali ke hasil",
   buyNow: "Beli Sekarang",
   freeDelivery: "Gratis pengiriman Besok"
+};
