@@ -15,12 +15,12 @@ export const zh = {
   categories: "按分类购物",
   showAll: "显示所有商品",
   allProducts: "所有商品",
-  results: "个结果"
-};
-  // ... 之前的
+  results: "个结果",
+  // 新增的详情页字段
   inStock: "有货",
   outOfStock: "缺货",
   description: "商品详情",
   backToResults: "返回上一页",
   buyNow: "立即购买",
   freeDelivery: "明日免费送达"
+};
