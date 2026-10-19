@@ -42,3 +42,15 @@ export class OrdersController {
     return this.prisma.order.update({ where: { id }, data: { status: 'REJECTED' } });
   }
 }
+import { Controller, Post, Body, Patch, Param, Get, NotFoundException } from '@nestjs/common';
+// ... 原来的代码保持不变 ...
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: { items: { include: { product: true } } },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
