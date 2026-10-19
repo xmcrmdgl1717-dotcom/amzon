@@ -20,8 +20,8 @@ export class ProductsController {
       rating: p.rating,
       reviewCount: p.reviewCount,
       isPrime: p.isPrime,
-      categoryId: p.categoryId, // 👈 返回分类 ID
-      categoryName: p.category?.name, // 👈 返回分类名称
+      categoryId: p.categoryId,
+      categoryName: p.category?.name,
       title: p.translations[0]?.title || p.slug,
       description: p.translations[0]?.description || ''
     }));
@@ -38,9 +38,14 @@ export class ProductsController {
         rating: 5.0,
         reviewCount: 0,
         isPrime: true,
-        categoryId: body.categoryId || null, // 👈 接收分类
+        categoryId: body.categoryId || null,
+        // 👈 接收多语言数组
         translations: {
-          create: [{ locale: 'en', title: body.title, description: body.description || '' }]
+          create: body.translations.map((t: any) => ({
+            locale: t.locale,
+            title: t.title,
+            description: t.description || ''
+          }))
         }
       }
     });
@@ -57,13 +62,14 @@ export class ProductsController {
         basePrice: body.price,
         image: body.image,
         stock: body.stock,
-        categoryId: body.categoryId || null, // 👈 更新分类
+        categoryId: body.categoryId || null,
         translations: {
-          upsert: {
-            where: { productId_locale: { productId: id, locale: 'en' } },
-            update: { title: body.title, description: body.description || '' },
-            create: { locale: 'en', title: body.title, description: body.description || '' }
-          }
+          // 👈 批量更新或创建多语言翻译
+          upsert: body.translations.map((t: any) => ({
+            where: { productId_locale: { productId: id, locale: t.locale } },
+            update: { title: t.title, description: t.description || '' },
+            create: { locale: t.locale, title: t.title, description: t.description || '' }
+          }))
         }
       }
     });
