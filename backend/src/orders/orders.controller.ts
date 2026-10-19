@@ -1,5 +1,6 @@
-import { Controller, Post, Body, Patch, Param, Get, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Get, NotFoundException, Req, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthGuard } from '@nestjs/passport'; // 如果没用 Passport，可以用简单的 JWT 解析
 
 @Controller('orders')
 export class OrdersController {
@@ -15,7 +16,6 @@ export class OrdersController {
       total += p.basePrice * item.quantity;
       itemsData.push({ productId: p.id, quantity: item.quantity, unitPrice: p.basePrice });
     }
-    
     return this.prisma.order.create({
       data: {
         orderNumber: 'ORD-' + Date.now(),
@@ -31,24 +31,25 @@ export class OrdersController {
 
   @Get()
   async findAll() {
-    // 👈 让订单列表带上关联的商品信息（包含标题、图片）
     return this.prisma.order.findMany({ 
-      include: { 
-        items: { 
-          include: { 
-            product: { 
-              include: { translations: { where: { locale: 'en' } } } 
-            } 
-          } 
-        } 
-      }, 
+      include: { items: { include: { product: { include: { translations: { where: { locale: 'en' } } } } } } }, 
       orderBy: { createdAt: 'desc' } 
     });
   }
 
+  // 👈 这里为了演示，假设你在前端传了 userId 或者从 token 解析（实际项目中应用 Guard）
   @Patch(':id/approve')
-  async approve(@Param('id') id: string) {
-    return this.prisma.order.update({ where: { id }, data: { status: 'APPROVED' } });
+  async approve(@Param('id') id: string, @Req() req: any) {
+    // 记录日志
+    const operatorId = req.headers['x-user-id'] || 'default-admin-id'; // 伪代码，实际用 Token 解析
+    const order = await this.prisma.order.update({ where: { id }, data: { status: 'APPROVED' } });
+    
+    if (operatorId !== 'default-admin-id') {
+      await this.prisma.auditLog.create({
+        data: { userId: operatorId, action: 'APPROVE_ORDER', targetId: id, details: `Approved order ${order.orderNumber}` }
+      });
+    }
+    return order;
   }
 
   @Patch(':id/reject')
@@ -56,7 +57,6 @@ export class OrdersController {
     return this.prisma.order.update({ where: { id }, data: { status: 'REJECTED' } });
   }
 
-  // 👈 新增发货接口
   @Patch(':id/ship')
   async ship(@Param('id') id: string) {
     return this.prisma.order.update({ where: { id }, data: { status: 'SHIPPED' } });
