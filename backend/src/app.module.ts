@@ -9,6 +9,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { AuditModule } from './audit/audit.module';
 import { StaffModule } from './staff/staff.module';
 import { BannersModule } from './banners/banners.module'; // 👈 引入
+import { ReviewsModule } from './reviews/reviews.module'; // 👈 新增
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { BannersModule } from './banners/banners.module'; // 👈 引入
     AuditModule,
     StaffModule,
     BannersModule // 👈 添加
+    ReviewsModule // 👈 添加
   ],
   controllers: [AuthController, ProductsController, OrdersController],
   providers: [PrismaService],
