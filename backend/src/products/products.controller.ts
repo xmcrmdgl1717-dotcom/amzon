@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Post, Body, Delete, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, Delete, Patch, Param, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('products')
@@ -31,7 +31,7 @@ export class ProductsController {
       data: {
         slug: body.slug || `product-${Date.now()}`,
         basePrice: body.price,
-        image: body.image, // 接收 Base64 字符串
+        image: body.image,
         stock: body.stock || 100,
         rating: 5.0,
         reviewCount: 0,
@@ -43,7 +43,37 @@ export class ProductsController {
     });
   }
 
-  // 👇 新增：删除商品接口
+  // 👇 新增：更新商品接口
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() body: any) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+
+    return this.prisma.product.update({
+      where: { id },
+      data: {
+        basePrice: body.price,
+        image: body.image,
+        stock: body.stock,
+        translations: {
+          // 使用 upsert 确保即使原商品没有该语言的翻译，也能安全创建
+          upsert: {
+            where: { productId_locale: { productId: id, locale: 'en' } },
+            update: {
+              title: body.title,
+              description: body.description || ''
+            },
+            create: {
+              locale: 'en',
+              title: body.title,
+              description: body.description || ''
+            }
+          }
+        }
+      }
+    });
+  }
+
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
