@@ -131,3 +131,40 @@ model Review {
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 }
+
+// ... (前面的 generator, datasource, 枚举等保持不变)
+
+// 👈 新增：优惠券模型
+model Coupon {
+  id          String   @id @default(uuid())
+  code        String   @unique // 优惠码，例如 "SUMMER20"
+  discount    Float    // 折扣比例 (例如 0.1 代表 10%) 或者固定金额
+  isPercentage Boolean @default(true) // 是否按百分比打折
+  minPurchase Float    @default(0) // 最低消费门槛
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime? // 过期时间 (可选)
+  createdAt   DateTime @default(now())
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  orderNumber   String      @unique
+  status        OrderStatus @default(PENDING_REVIEW)
+  customerName  String
+  customerEmail String
+  shippingAddr  String
+  customerId    String?
+  locale        String      @default("en")
+  totalAmount   Float
+  // 👈 新增优惠券字段
+  couponCode    String?
+  discountAmount Float      @default(0)
+  
+  rejectReason  String?
+  reviewedById  String?
+  reviewedBy    User?       @relation("Reviewer", fields: [reviewedById], references: [id])
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+}
+
+// ... (其他模型 Category, Product, Customer, Banner, Review 等保持不变)
