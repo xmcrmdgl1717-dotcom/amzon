@@ -9,6 +9,7 @@ import Staff from './pages/Staff';
 import AuditLogs from './pages/AuditLogs';
 import Banners from './pages/Banners';
 import Reviews from './pages/Reviews'; // 👈 引入评论管理
+import Coupons from './pages/Coupons'; // 引入
 
 export const API = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000';
 
@@ -31,6 +32,7 @@ function Layout({ children }: { children: React.ReactNode }) {
     { path: '/customers', name: '客户管理' },
     { path: '/staff', name: '员工管理' },
     { path: '/audit-logs', name: '操作日志' },
+    { path: '/coupons', name: '优惠券管理' },
   ];
 
   return (
