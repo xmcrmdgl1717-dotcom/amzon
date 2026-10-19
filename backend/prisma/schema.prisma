@@ -168,3 +168,28 @@ model Order {
 }
 
 // ... (其他模型 Category, Product, Customer, Banner, Review 等保持不变)
+
+// ... 前面的代码保持不变 ...
+model Order {
+  id            String      @id @default(uuid())
+  orderNumber   String      @unique
+  status        OrderStatus @default(PENDING_REVIEW)
+  customerName  String
+  customerEmail String
+  shippingAddr  String
+  customerId    String?
+  locale        String      @default("en")
+  totalAmount   Float
+  couponCode    String?
+  discountAmount Float      @default(0)
+  
+  // 👈 新增：物流单号
+  trackingNumber String?
+  
+  rejectReason  String?
+  reviewedById  String?
+  reviewedBy    User?       @relation("Reviewer", fields: [reviewedById], references: [id])
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+}
+// ... 后面的代码保持不变 ...
